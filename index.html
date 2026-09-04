@@ -515,7 +515,7 @@ function render(){
             ${it.unit ? `<p class="item-unit">${escapeHtml(it.unit)}</p>` : ''}
           </div>
           <div style="display:flex;align-items:center;gap:10px;">
-            <div class="item-price"><span>ج.م</span>${Number(it.price).toLocaleString('ar-EG')}</div>
+            <div class="item-price">${Number(it.price).toLocaleString('ar-EG')}<span>ج.م</span></div>
             ${editMode ? `
             <div class="item-actions">
               <button class="icon-btn" onclick="startEdit('${it.id}')" title="تعديل">✏️</button>
@@ -537,10 +537,6 @@ function renderAddForm(){
       <h3>${editingId ? 'تعديل الصنف' : 'إضافة صنف جديد'}</h3>
       <div class="form-row">
         <input id="fName" placeholder="اسم الصنف" />
-      </div>
-      <div class="form-row">
-        <input id="fPrice" type="number" step="0.01" placeholder="السعر بالجنيه" />
-        <input id="fUnit" placeholder="الوحدة (كيلو، علبة...) اختياري" />
       </div>
       <div class="form-row">
         <input id="fCat" placeholder="التصنيف (اختياري)" />
