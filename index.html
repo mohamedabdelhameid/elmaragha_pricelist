@@ -539,6 +539,12 @@ function renderAddForm(){
         <input id="fName" placeholder="اسم الصنف" />
       </div>
       <div class="form-row">
+        <input id="fPrice" type="number" placeholder="السعر" />
+      </div>
+      <div class="form-row">
+        <input id="fUnit" placeholder="الوحدة (اختياري)" />
+      </div>
+      <div class="form-row">
         <input id="fCat" placeholder="التصنيف (اختياري)" />
       </div>
       <div class="form-actions">
@@ -656,15 +662,12 @@ auth.onAuthStateChanged((user)=>{
 
 function updateModeUI(){
   const btn = document.getElementById('modeBtn');
-  const note = document.getElementById('branchNote');
   if(editMode){
     btn.textContent = '✅ وضع التعديل شغال — اخرج';
     btn.classList.add('active');
-    note.textContent = 'إنت في وضع التعديل. أي حفظ هيوصل للفروع كلها فورًا';
   }else{
     btn.textContent = '🔒 دخول التعديل';
     btn.classList.remove('active');
-    note.textContent = 'نفس القايمة بتوصل لكل الفروع لحظة بلحظة';
   }
   renderAddForm();
   updateMaintenanceUI();
