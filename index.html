@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>قايمة الأسعار</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Tajawal:wght@400;500;700&display=swap');
+
+  :root{
+    --ink:#1c231f;
+    --paper:#f7f5ef;
+    --paper-2:#ffffff;
+    --line:#dcd8c8;
+    --green:#1f5c46;
+    --green-dark:#153f30;
+    --amber:#b8481f;
+    --muted:#7a7568;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Tajawal', sans-serif;
+    min-height:100vh;
+    padding:0;
+  }
+
+  .wrap{
+    max-width:640px;
+    margin:0 auto;
+    padding:20px 16px 80px;
+  }
+
+  header{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:12px;
+    padding:22px 20px;
+    background:var(--green);
+    color:#f2f0e6;
+    border-radius:14px;
+    margin-bottom:18px;
+    position:relative;
+    overflow:hidden;
+  }
+  header::after{
+    content:"";
+    position:absolute;
+    left:-30px;
+    top:-30px;
+    width:120px;
+    height:120px;
+    background:var(--green-dark);
+    border-radius:50%;
+    opacity:.5;
+  }
+  .htext{position:relative;}
+  .htext h1{
+    font-family:'Cairo', sans-serif;
+    font-weight:900;
+    font-size:24px;
+    margin:0 0 4px;
+  }
+  .htext p{
+    margin:0;
+    font-size:13.5px;
+    color:#dcd6bd;
+  }
+  .updated{
+    position:relative;
+    font-size:12px;
+    color:#cfe3d8;
+    white-space:nowrap;
+    padding-top:2px;
+  }
+  .live-dot{
+    display:inline-block;
+    width:7px;height:7px;
+    border-radius:50%;
+    background:#6fd39a;
+    margin-left:5px;
+    box-shadow:0 0 0 0 rgba(111,211,154,.6);
+    animation:pulse 2s infinite;
+  }
+  @keyframes pulse{
+    0%{box-shadow:0 0 0 0 rgba(111,211,154,.5);}
+    70%{box-shadow:0 0 0 6px rgba(111,211,154,0);}
+    100%{box-shadow:0 0 0 0 rgba(111,211,154,0);}
+  }
+
+  .toolbar{
+    display:flex;
+    gap:8px;
+    margin-bottom:16px;
+    flex-wrap:wrap;
+  }
+  .pill-btn{
+    border:1.5px solid var(--line);
+    background:var(--paper-2);
+    color:var(--ink);
+    padding:9px 16px;
+    border-radius:999px;
+    font-family:'Tajawal';
+    font-size:13.5px;
+    font-weight:700;
+    cursor:pointer;
+    transition:.15s;
+  }
+  .pill-btn:hover{border-color:var(--green);color:var(--green);}
+  .pill-btn.active{background:var(--green);border-color:var(--green);color:#fff;}
+
+  .search{
+    flex:1;
+    min-width:140px;
+    border:1.5px solid var(--line);
+    background:var(--paper-2);
+    border-radius:999px;
+    padding:9px 16px;
+    font-family:'Tajawal';
+    font-size:13.5px;
+    color:var(--ink);
+  }
+  .search:focus{outline:none;border-color:var(--green);}
+
+  .cat-group{margin-bottom:22px;}
+  .cat-title{
+    font-family:'Cairo';
+    font-weight:700;
+    font-size:13px;
+    color:var(--muted);
+    margin:0 4px 8px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .cat-title::after{
+    content:"";
+    flex:1;
+    height:1px;
+    background:var(--line);
+  }
+
+  .item{
+    background:var(--paper-2);
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:13px 16px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    margin-bottom:8px;
+  }
+  .item-main{min-width:0;}
+  .item-name{
+    font-weight:700;
+    font-size:15.5px;
+    margin:0 0 2px;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+  .item-unit{
+    font-size:12px;
+    color:var(--muted);
+    margin:0;
+  }
+  .item-price{
+    font-family:'Cairo';
+    font-weight:900;
+    font-size:19px;
+    color:var(--green);
+    white-space:nowrap;
+  }
+  .item-price span{
+    font-size:12px;
+    font-weight:600;
+    color:var(--muted);
+    margin-right:3px;
+  }
+
+  .item-actions{display:flex;gap:6px;}
+  .icon-btn{
+    border:none;
+    background:transparent;
+    width:30px;height:30px;
+    border-radius:8px;
+    cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+    color:var(--muted);
+    font-size:15px;
+  }
+  .icon-btn:hover{background:var(--paper);color:var(--ink);}
+  .icon-btn.danger:hover{color:var(--amber);}
+
+  .empty{
+    text-align:center;
+    padding:50px 20px;
+    color:var(--muted);
+    font-size:14px;
+  }
+
+  .form-card{
+    background:var(--paper-2);
+    border:1.5px solid var(--green);
+    border-radius:14px;
+    padding:16px;
+    margin-bottom:20px;
+  }
+  .form-card h3{
+    font-family:'Cairo';
+    margin:0 0 12px;
+    font-size:15px;
+  }
+  .form-row{
+    display:flex;
+    gap:8px;
+    margin-bottom:8px;
+  }
+  .form-row input{
+    flex:1;
+    min-width:0;
+    border:1.5px solid var(--line);
+    border-radius:9px;
+    padding:10px 12px;
+    font-family:'Tajawal';
+    font-size:14px;
+    background:var(--paper);
+  }
+  .form-row input:focus{outline:none;border-color:var(--green);}
+  .form-actions{display:flex;gap:8px;margin-top:4px;}
+  .btn{
+    border:none;
+    border-radius:9px;
+    padding:10px 18px;
+    font-family:'Tajawal';
+    font-weight:700;
+    font-size:14px;
+    cursor:pointer;
+  }
+  .btn-primary{background:var(--green);color:#fff;}
+  .btn-primary:hover{background:var(--green-dark);}
+  .btn-ghost{background:transparent;color:var(--muted);}
+  .btn-ghost:hover{color:var(--ink);}
+  .btn[disabled]{opacity:.6;cursor:default;}
+
+  .overlay{
+    position:fixed;inset:0;
+    background:rgba(20,20,18,.5);
+    display:flex;align-items:center;justify-content:center;
+    padding:20px;
+    z-index:50;
+  }
+  .modal{
+    background:var(--paper-2);
+    border-radius:16px;
+    padding:26px 24px;
+    max-width:340px;
+    width:100%;
+    text-align:center;
+  }
+  .modal h3{font-family:'Cairo';margin:0 0 6px;font-size:17px;}
+  .modal p{color:var(--muted);font-size:13px;margin:0 0 16px;}
+  .modal input{
+    width:100%;
+    text-align:center;
+    font-size:15px;
+    padding:11px;
+    border:1.5px solid var(--line);
+    border-radius:9px;
+    margin-bottom:10px;
+    font-family:'Tajawal';
+    direction:ltr;
+  }
+  .modal input:focus{outline:none;border-color:var(--green);}
+  .modal .row{display:flex;gap:8px;margin-top:6px;}
+  .modal .row button{flex:1;}
+  .modal-error{
+    color:var(--amber);
+    font-size:12.5px;
+    margin:-4px 0 10px;
+    min-height:14px;
+  }
+
+  .toast{
+    position:fixed;
+    bottom:20px;left:50%;
+    transform:translateX(-50%);
+    background:var(--green-dark);
+    color:#fff;
+    padding:10px 20px;
+    border-radius:999px;
+    font-size:13px;
+    box-shadow:0 6px 20px rgba(0,0,0,.2);
+    z-index:60;
+    opacity:0;
+    transition:opacity .25s, transform .25s;
+    pointer-events:none;
+    max-width:90%;
+    text-align:center;
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(-4px);}
+
+  .maintenance-banner{
+    flex-direction:column;
+    align-items:center;
+    text-align:center;
+    padding:60px 20px;
+    background:var(--paper-2);
+    border:1.5px dashed var(--line);
+    border-radius:14px;
+  }
+  .maintenance-icon{
+    font-size:34px;
+    margin-bottom:10px;
+  }
+  .maintenance-banner h2{
+    font-family:'Cairo';
+    font-size:18px;
+    margin:0 0 6px;
+    color:var(--ink);
+  }
+  .maintenance-banner p{
+    font-size:13.5px;
+    color:var(--muted);
+    margin:0;
+  }
+
+  .footnote{
+    text-align:center;
+    font-size:11.5px;
+    color:var(--muted);
+    margin-top:26px;
+  }
+
+  ::selection{background:#c8e2d5;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="htext">
+      <h1>قايمة الأسعار</h1>
+      <p id="branchNote">نفس القايمة بتوصل لكل الفروع لحظة بلحظة</p>
+    </div>
+    <div class="updated"><span class="live-dot"></span><span id="updatedAt">بيتم الاتصال...</span></div>
+  </header>
+
+  <div class="toolbar">
+    <button class="pill-btn" id="modeBtn">🔒 دخول التعديل</button>
+    <button class="pill-btn" id="maintenanceToggle" style="display:none;" onclick="toggleMaintenance()"></button>
+    <input class="search" id="searchBox" placeholder="دور على صنف...">
+  </div>
+
+  <div id="addFormHolder"></div>
+
+  <div id="maintenanceBanner" class="maintenance-banner" style="display:none;">
+    <div class="maintenance-icon">🛠️</div>
+    <h2>جاري تحديث الأسعار</h2>
+    <p>القايمة هترجع تظهر خلال شوية، استنى لحظات...</p>
+  </div>
+
+  <div id="listHolder">
+    <div class="empty">بيتم تحميل القايمة...</div>
+  </div>
+
+  <div class="footnote">افتح نفس اللينك ده على موبايل أي فرع، وهيشوف آخر تحديث أول ما يحصل.</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.23.0/firebase-app-compat.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.23.0/firebase-auth-compat.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.23.0/firebase-firestore-compat.min.js"></script>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyC44uXmGnJCFPWosKDZk3aEaapFG0MQ4XM",
+  authDomain: "pricelist-elmaragha.firebaseapp.com",
+  projectId: "pricelist-elmaragha",
+  storageBucket: "pricelist-elmaragha.firebasestorage.app",
+  messagingSenderId: "263475699856",
+  appId: "1:263475699856:web:661b8c2e024df17ac4b815",
+  measurementId: "G-JPX3NDP175"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const auth = firebase.auth();
+const priceDocRef = db.collection("store").doc("priceList");
+
+let items = [];
+let editMode = false;
+let editingId = null;
+let isLoggedIn = false;
+
+function uid(){ return 'i' + Math.random().toString(36).slice(2,9); }
+
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2200);
+}
+
+function fmtTime(ts){
+  const d = new Date(ts);
+  return d.toLocaleString('ar-EG', {hour:'2-digit', minute:'2-digit', day:'2-digit', month:'2-digit'});
+}
+
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+let maintenanceMode = false;
+
+// --- Real-time listener: every branch gets updates instantly ---
+priceDocRef.onSnapshot((snap)=>{
+  if(snap.exists){
+    const data = snap.data();
+    items = data.items || [];
+    maintenanceMode = !!data.maintenance;
+    document.getElementById('updatedAt').textContent = data.updatedAt ? 'آخر تحديث: ' + fmtTime(data.updatedAt) : 'متصل';
+  }else{
+    items = [];
+    maintenanceMode = false;
+    document.getElementById('updatedAt').textContent = 'متصل — القايمة فاضية';
+  }
+  updateMaintenanceUI();
+  render();
+}, (err)=>{
+  document.getElementById('updatedAt').textContent = 'في مشكلة اتصال';
+  console.error(err);
+});
+
+function updateMaintenanceUI(){
+  const banner = document.getElementById('maintenanceBanner');
+  const toggleBtn = document.getElementById('maintenanceToggle');
+  const listHolder = document.getElementById('listHolder');
+
+  if(maintenanceMode && !editMode){
+    banner.style.display = 'flex';
+    listHolder.style.display = 'none';
+    document.getElementById('searchBox').style.display = 'none';
+  }else{
+    banner.style.display = 'none';
+    listHolder.style.display = '';
+    document.getElementById('searchBox').style.display = '';
+  }
+
+  if(editMode){
+    toggleBtn.style.display = 'inline-block';
+    toggleBtn.textContent = maintenanceMode ? '▶️ رجّع القايمة تظهر للفروع' : '⏸️ وقّف القايمة مؤقتًا (جاري التعديل)';
+    toggleBtn.classList.toggle('active', maintenanceMode);
+  }else{
+    toggleBtn.style.display = 'none';
+  }
+}
+
+window.toggleMaintenance = async function(){
+  maintenanceMode = !maintenanceMode;
+  updateMaintenanceUI();
+  try{
+    await priceDocRef.set({items, updatedAt: Date.now(), maintenance: maintenanceMode}, {merge:true});
+    toast(maintenanceMode ? 'الفروع بتشوف دلوقتي: جاري التعديل' : 'رجّعت القايمة تظهر للفروع');
+  }catch(e){
+    toast('مقدرش يحفظ الحالة');
+  }
+};
+
+async function saveItems(){
+  try{
+    await priceDocRef.set({items, updatedAt: Date.now(), maintenance: maintenanceMode}, {merge:true});
+  }catch(e){
+    toast('مقدرش يحفظ — تأكد إنك لسه داخل بحسابك');
+    console.error(e);
+  }
+}
+
+function groupByCategory(list){
+  const groups = {};
+  list.forEach(it=>{
+    const cat = it.category && it.category.trim() ? it.category.trim() : 'أصناف عامة';
+    if(!groups[cat]) groups[cat] = [];
+    groups[cat].push(it);
+  });
+  return groups;
+}
+
+function render(){
+  const holder = document.getElementById('listHolder');
+  const q = document.getElementById('searchBox').value.trim().toLowerCase();
+  let list = items;
+  if(q){
+    list = items.filter(it => it.name.toLowerCase().includes(q));
+  }
+
+  if(list.length === 0){
+    holder.innerHTML = `<div class="empty">${items.length===0 ? (editMode ? 'لسه مفيش أصناف، ضيف أول صنف من فوق' : 'القايمة لسه فاضية') : 'مفيش نتايج للبحث ده'}</div>`;
+    return;
+  }
+
+  const groups = groupByCategory(list);
+  let html = '';
+  Object.keys(groups).forEach(cat=>{
+    html += `<div class="cat-group"><div class="cat-title">${escapeHtml(cat)}</div>`;
+    groups[cat].sort((a,b)=>a.name.localeCompare(b.name,'ar')).forEach(it=>{
+      html += `
+        <div class="item">
+          <div class="item-main">
+            <p class="item-name">${escapeHtml(it.name)}</p>
+            ${it.unit ? `<p class="item-unit">${escapeHtml(it.unit)}</p>` : ''}
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div class="item-price"><span>ج.م</span>${Number(it.price).toLocaleString('ar-EG')}</div>
+            ${editMode ? `
+            <div class="item-actions">
+              <button class="icon-btn" onclick="startEdit('${it.id}')" title="تعديل">✏️</button>
+              <button class="icon-btn danger" onclick="deleteItem('${it.id}')" title="حذف">🗑️</button>
+            </div>` : ''}
+          </div>
+        </div>`;
+    });
+    html += `</div>`;
+  });
+  holder.innerHTML = html;
+}
+
+function renderAddForm(){
+  const holder = document.getElementById('addFormHolder');
+  if(!editMode){ holder.innerHTML = ''; return; }
+  holder.innerHTML = `
+    <div class="form-card">
+      <h3>${editingId ? 'تعديل الصنف' : 'إضافة صنف جديد'}</h3>
+      <div class="form-row">
+        <input id="fName" placeholder="اسم الصنف" />
+      </div>
+      <div class="form-row">
+        <input id="fPrice" type="number" step="0.01" placeholder="السعر بالجنيه" />
+        <input id="fUnit" placeholder="الوحدة (كيلو، علبة...) اختياري" />
+      </div>
+      <div class="form-row">
+        <input id="fCat" placeholder="التصنيف (اختياري)" />
+      </div>
+      <div class="form-actions">
+        <button class="btn btn-primary" onclick="submitForm()">${editingId ? 'حفظ التعديل' : 'إضافة'}</button>
+        <button class="btn btn-ghost" onclick="cancelForm()">إلغاء</button>
+      </div>
+    </div>
+  `;
+  if(editingId){
+    const it = items.find(i=>i.id===editingId);
+    if(it){
+      document.getElementById('fName').value = it.name;
+      document.getElementById('fPrice').value = it.price;
+      document.getElementById('fUnit').value = it.unit || '';
+      document.getElementById('fCat').value = it.category || '';
+    }
+  }
+}
+
+window.startEdit = function(id){
+  editingId = id;
+  renderAddForm();
+  window.scrollTo({top:0, behavior:'smooth'});
+};
+
+window.deleteItem = async function(id){
+  if(!confirm('متأكد إنك عايز تحذف الصنف ده؟')) return;
+  items = items.filter(i=>i.id!==id);
+  await saveItems();
+  toast('اتحذف');
+};
+
+window.submitForm = async function(){
+  const name = document.getElementById('fName').value.trim();
+  const price = document.getElementById('fPrice').value;
+  const unit = document.getElementById('fUnit').value.trim();
+  const cat = document.getElementById('fCat').value.trim();
+  if(!name || price === ''){
+    toast('اكتب اسم الصنف والسعر');
+    return;
+  }
+  if(editingId){
+    const it = items.find(i=>i.id===editingId);
+    if(it){ it.name=name; it.price=parseFloat(price); it.unit=unit; it.category=cat; }
+    toast('اتحفظ التعديل');
+  }else{
+    items.push({id: uid(), name, price: parseFloat(price), unit, category: cat});
+    toast('اتضاف الصنف');
+  }
+  editingId = null;
+  await saveItems();
+  renderAddForm();
+};
+
+window.cancelForm = function(){
+  editingId = null;
+  renderAddForm();
+};
+
+// --- Login modal (real Firebase email/password auth) ---
+const ADMIN_EMAIL = "hazem@mrmobile.com";
+
+function openLoginModal(){
+  const overlay = document.createElement('div');
+  overlay.className = 'overlay';
+  overlay.id = 'loginOverlay';
+  overlay.innerHTML = `
+    <div class="modal">
+      <h3>دخول وضع التعديل</h3>
+      <p>اكتب الرقم السري عشان تقدر تعدّل الأسعار</p>
+      <input id="passInput" type="password" inputmode="numeric" placeholder="الرقم السري" />
+      <div class="modal-error" id="loginError"></div>
+      <div class="row">
+        <button class="btn btn-ghost" onclick="closeLoginModal()">إلغاء</button>
+        <button class="btn btn-primary" id="loginSubmitBtn" onclick="doLogin()">دخول</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+  document.getElementById('passInput').addEventListener('keydown', e=>{ if(e.key==='Enter') doLogin(); });
+  document.getElementById('passInput').focus();
+}
+
+window.closeLoginModal = function(){
+  const o = document.getElementById('loginOverlay');
+  if(o) o.remove();
+};
+
+window.doLogin = async function(){
+  const pass = document.getElementById('passInput').value;
+  const errEl = document.getElementById('loginError');
+  const btn = document.getElementById('loginSubmitBtn');
+  if(!pass){
+    errEl.textContent = 'اكتب الرقم السري';
+    return;
+  }
+  btn.disabled = true;
+  btn.textContent = 'بيدخل...';
+  try{
+    await auth.signInWithEmailAndPassword(ADMIN_EMAIL, pass);
+    closeLoginModal();
+    toast('اتفتح وضع التعديل');
+  }catch(e){
+    errEl.textContent = 'الرقم غلط';
+    btn.disabled = false;
+    btn.textContent = 'دخول';
+  }
+};
+
+auth.onAuthStateChanged((user)=>{
+  isLoggedIn = !!user;
+  editMode = isLoggedIn;
+  updateModeUI();
+});
+
+function updateModeUI(){
+  const btn = document.getElementById('modeBtn');
+  const note = document.getElementById('branchNote');
+  if(editMode){
+    btn.textContent = '✅ وضع التعديل شغال — اخرج';
+    btn.classList.add('active');
+    note.textContent = 'إنت في وضع التعديل. أي حفظ هيوصل للفروع كلها فورًا';
+  }else{
+    btn.textContent = '🔒 دخول التعديل';
+    btn.classList.remove('active');
+    note.textContent = 'نفس القايمة بتوصل لكل الفروع لحظة بلحظة';
+  }
+  renderAddForm();
+  updateMaintenanceUI();
+  render();
+}
+
+document.getElementById('modeBtn').addEventListener('click', ()=>{
+  if(editMode){
+    auth.signOut();
+    editingId = null;
+    toast('خرجت من وضع التعديل');
+  }else{
+    openLoginModal();
+  }
+});
+
+document.getElementById('searchBox').addEventListener('input', render);
+
+updateModeUI();
+</script>
+</body>
+</html>
