@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -126,62 +127,74 @@
   }
   .search:focus{outline:none;border-color:var(--green);}
 
-  .cat-group{margin-bottom:22px;}
-  .cat-title{
-    font-family:'Cairo';
-    font-weight:700;
-    font-size:13px;
-    color:var(--muted);
-    margin:0 4px 8px;
+  .cat-group{
+    margin-bottom:18px;
+    border:1px solid var(--line);
+    border-radius:12px;
+    overflow:hidden;
+    background:var(--paper-2);
+  }
+  .cat-header{
+    background:#e8b93a;
+    color:#2a2410;
+    padding:11px 16px;
     display:flex;
     align-items:center;
-    gap:8px;
+    justify-content:space-between;
+    font-family:'Cairo';
+    font-weight:800;
+    font-size:14px;
   }
-  .cat-title::after{
-    content:"";
-    flex:1;
-    height:1px;
-    background:var(--line);
+  .cat-count{
+    font-size:12px;
+    font-weight:700;
+    opacity:.75;
   }
 
   .item{
-    background:var(--paper-2);
-    border:1px solid var(--line);
-    border-radius:12px;
-    padding:13px 16px;
     display:flex;
     align-items:center;
     justify-content:space-between;
     gap:10px;
-    margin-bottom:8px;
+    padding:11px 16px;
+    border-bottom:1px solid var(--line);
   }
-  .item-main{min-width:0;}
+  .item:last-child{border-bottom:none;}
+  .item-main{min-width:0;flex:1;text-align:right;}
   .item-name{
     font-weight:700;
-    font-size:15.5px;
-    margin:0 0 2px;
+    font-size:14.5px;
+    margin:0 0 1px;
     overflow:hidden;
     text-overflow:ellipsis;
     white-space:nowrap;
   }
   .item-unit{
-    font-size:12px;
+    font-size:11.5px;
     color:var(--muted);
     margin:0;
   }
-  .item-price{
+  .price-col{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    min-width:56px;
+  }
+  .price-col .price-label{
+    font-size:10.5px;
+    font-weight:700;
+    color:var(--muted);
+    margin-bottom:1px;
+  }
+  .price-col .price-value{
     font-family:'Cairo';
-    font-weight:900;
-    font-size:19px;
-    color:var(--green);
+    font-weight:800;
+    font-size:14.5px;
     white-space:nowrap;
   }
-  .item-price span{
-    font-size:12px;
-    font-weight:600;
-    color:var(--muted);
-    margin-right:3px;
-  }
+  .price-col.retail .price-value{color:var(--amber);}
+  .price-col.wholesale .price-value{color:var(--green);}
+  .price-col .price-value.empty{color:var(--line);font-weight:400;}
 
   .item-actions{display:flex;gap:6px;}
   .icon-btn{
@@ -286,6 +299,48 @@
     min-height:14px;
   }
 
+  .modal.wide{max-width:480px;text-align:right;}
+  .modal.wide h3{text-align:center;}
+  .modal.wide p{text-align:center;}
+  .bulk-textarea{
+    width:100%;
+    min-height:160px;
+    border:1.5px solid var(--line);
+    border-radius:9px;
+    padding:11px;
+    font-family:'Tajawal';
+    font-size:13.5px;
+    resize:vertical;
+    margin-bottom:10px;
+    direction:rtl;
+  }
+  .bulk-textarea:focus{outline:none;border-color:var(--green);}
+  .bulk-hint{
+    background:var(--paper);
+    border-radius:8px;
+    padding:9px 12px;
+    font-size:12px;
+    color:var(--muted);
+    margin-bottom:10px;
+    line-height:1.7;
+  }
+  .bulk-hint code{
+    background:var(--paper-2);
+    border:1px solid var(--line);
+    border-radius:4px;
+    padding:1px 5px;
+    font-family:monospace;
+    direction:ltr;
+    display:inline-block;
+  }
+  .bulk-result{
+    font-size:13px;
+    font-weight:700;
+    color:var(--green);
+    margin-bottom:8px;
+    min-height:18px;
+  }
+
   .toast{
     position:fixed;
     bottom:20px;left:50%;
@@ -346,6 +401,7 @@
   <header>
     <div class="htext">
       <h1>قايمة الأسعار</h1>
+      <p id="branchNote">نفس القايمة بتوصل لكل الفروع لحظة بلحظة</p>
     </div>
     <div class="updated"><span class="live-dot"></span><span id="updatedAt">بيتم الاتصال...</span></div>
   </header>
@@ -353,6 +409,7 @@
   <div class="toolbar">
     <button class="pill-btn" id="modeBtn">🔒 دخول التعديل</button>
     <button class="pill-btn" id="maintenanceToggle" style="display:none;" onclick="toggleMaintenance()"></button>
+    <button class="pill-btn" id="bulkImportBtn" style="display:none;" onclick="openBulkImport()">📋 لصق قائمة دفعة واحدة</button>
     <input class="search" id="searchBox" placeholder="دور على صنف...">
   </div>
 
@@ -368,6 +425,7 @@
     <div class="empty">بيتم تحميل القايمة...</div>
   </div>
 
+  <div class="footnote">افتح نفس اللينك ده على موبايل أي فرع، وهيشوف آخر تحديث أول ما يحصل.</div>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -506,22 +564,39 @@ function render(){
   const groups = groupByCategory(list);
   let html = '';
   Object.keys(groups).forEach(cat=>{
-    html += `<div class="cat-group"><div class="cat-title">${escapeHtml(cat)}</div>`;
-    groups[cat].sort((a,b)=>a.name.localeCompare(b.name,'ar')).forEach(it=>{
+    const catItems = groups[cat].slice().sort((a,b)=>a.name.localeCompare(b.name,'ar'));
+    html += `
+      <div class="cat-group">
+        <div class="cat-header">
+          <span>${escapeHtml(cat)}</span>
+          <span class="cat-count">${catItems.length} صنف</span>
+        </div>`;
+    catItems.forEach(it=>{
+      const retailVal = (it.priceRetail || it.priceRetail === 0)
+        ? Number(it.priceRetail).toLocaleString('ar-EG')
+        : null;
+      const wholesaleVal = (it.priceWholesale || it.priceWholesale === 0)
+        ? Number(it.priceWholesale).toLocaleString('ar-EG')
+        : null;
       html += `
         <div class="item">
           <div class="item-main">
             <p class="item-name">${escapeHtml(it.name)}</p>
             ${it.unit ? `<p class="item-unit">${escapeHtml(it.unit)}</p>` : ''}
           </div>
-          <div style="display:flex;align-items:center;gap:10px;">
-            <div class="item-price">${Number(it.price).toLocaleString('ar-EG')}<span>ج.م</span></div>
-            ${editMode ? `
+          <div class="price-col wholesale">
+            <span class="price-label">جملة</span>
+            <span class="price-value ${wholesaleVal ? '' : 'empty'}">${wholesaleVal || '—'}</span>
+          </div>
+          <div class="price-col retail">
+            <span class="price-label">مستهلك</span>
+            <span class="price-value ${retailVal ? '' : 'empty'}">${retailVal || '—'}</span>
+          </div>
+          ${editMode ? `
             <div class="item-actions">
               <button class="icon-btn" onclick="startEdit('${it.id}')" title="تعديل">✏️</button>
               <button class="icon-btn danger" onclick="deleteItem('${it.id}')" title="حذف">🗑️</button>
             </div>` : ''}
-          </div>
         </div>`;
     });
     html += `</div>`;
@@ -539,12 +614,11 @@ function renderAddForm(){
         <input id="fName" placeholder="اسم الصنف" />
       </div>
       <div class="form-row">
-        <input id="fPrice" type="number" placeholder="السعر" />
+        <input id="fPriceRetail" type="number" step="0.01" placeholder="سعر القطاعي" />
+        <input id="fPriceWholesale" type="number" step="0.01" placeholder="سعر الجملة (اختياري)" />
       </div>
       <div class="form-row">
-        <input id="fUnit" placeholder="الوحدة (اختياري)" />
-      </div>
-      <div class="form-row">
+        <input id="fUnit" placeholder="الوحدة (كيلو، علبة...) اختياري" />
         <input id="fCat" placeholder="التصنيف (اختياري)" />
       </div>
       <div class="form-actions">
@@ -557,7 +631,8 @@ function renderAddForm(){
     const it = items.find(i=>i.id===editingId);
     if(it){
       document.getElementById('fName').value = it.name;
-      document.getElementById('fPrice').value = it.price;
+      document.getElementById('fPriceRetail').value = it.priceRetail || '';
+      document.getElementById('fPriceWholesale').value = it.priceWholesale || '';
       document.getElementById('fUnit').value = it.unit || '';
       document.getElementById('fCat').value = it.category || '';
     }
@@ -579,19 +654,33 @@ window.deleteItem = async function(id){
 
 window.submitForm = async function(){
   const name = document.getElementById('fName').value.trim();
-  const price = document.getElementById('fPrice').value;
+  const priceRetail = document.getElementById('fPriceRetail').value;
+  const priceWholesale = document.getElementById('fPriceWholesale').value;
   const unit = document.getElementById('fUnit').value.trim();
   const cat = document.getElementById('fCat').value.trim();
-  if(!name || price === ''){
-    toast('اكتب اسم الصنف والسعر');
+  if(!name || priceRetail === ''){
+    toast('اكتب اسم الصنف وسعر القطاعي على الأقل');
     return;
   }
   if(editingId){
     const it = items.find(i=>i.id===editingId);
-    if(it){ it.name=name; it.price=parseFloat(price); it.unit=unit; it.category=cat; }
+    if(it){
+      it.name=name;
+      it.priceRetail=parseFloat(priceRetail);
+      it.priceWholesale = priceWholesale !== '' ? parseFloat(priceWholesale) : null;
+      it.unit=unit;
+      it.category=cat;
+    }
     toast('اتحفظ التعديل');
   }else{
-    items.push({id: uid(), name, price: parseFloat(price), unit, category: cat});
+    items.push({
+      id: uid(),
+      name,
+      priceRetail: parseFloat(priceRetail),
+      priceWholesale: priceWholesale !== '' ? parseFloat(priceWholesale) : null,
+      unit,
+      category: cat
+    });
     toast('اتضاف الصنف');
   }
   editingId = null;
@@ -602,6 +691,93 @@ window.submitForm = async function(){
 window.cancelForm = function(){
   editingId = null;
   renderAddForm();
+};
+
+// --- Bulk import: paste many items at once ---
+window.openBulkImport = function(){
+  const overlay = document.createElement('div');
+  overlay.className = 'overlay';
+  overlay.id = 'bulkOverlay';
+  overlay.innerHTML = `
+    <div class="modal wide">
+      <h3>لصق قائمة دفعة واحدة</h3>
+      <p>هيتضاف كل سطر كصنف منفصل</p>
+      <div class="bulk-hint">
+        اكتب سطر لكل صنف بالترتيب ده، وافصل بين الأجزاء بفاصلة <code>,</code>:<br>
+        <code>الاسم, سعر المستهلك, سعر الجملة</code><br>
+        سعر الجملة اختياري، ينفع تسيبه فاضي.<br>
+        مثال:<br>
+        <code>A07-64G, 7450, 7400</code><br>
+        <code>A07-4/128G, 8550, 8500</code><br>
+        <code>A17-8/256G 5G, 0, 0</code>
+      </div>
+      <input id="bulkCat" placeholder="التصنيف لكل الأصناف دي (اختياري، زي Samsung)" style="width:100%;border:1.5px solid var(--line);border-radius:9px;padding:10px 12px;font-family:'Tajawal';font-size:14px;margin-bottom:10px;" />
+      <textarea id="bulkText" class="bulk-textarea" placeholder="الصق القائمة هنا..."></textarea>
+      <div class="bulk-result" id="bulkResult"></div>
+      <div class="row">
+        <button class="btn btn-ghost" onclick="closeBulkImport()">إلغاء</button>
+        <button class="btn btn-primary" id="bulkSubmitBtn" onclick="submitBulkImport()">إضافة الكل</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+  document.getElementById('bulkText').focus();
+};
+
+window.closeBulkImport = function(){
+  const o = document.getElementById('bulkOverlay');
+  if(o) o.remove();
+};
+
+window.submitBulkImport = async function(){
+  const raw = document.getElementById('bulkText').value;
+  const cat = document.getElementById('bulkCat').value.trim();
+  const resultEl = document.getElementById('bulkResult');
+  const btn = document.getElementById('bulkSubmitBtn');
+
+  const lines = raw.split('\n').map(l=>l.trim()).filter(l=>l.length>0);
+  if(lines.length === 0){
+    resultEl.style.color = 'var(--amber)';
+    resultEl.textContent = 'الصق القائمة الأول';
+    return;
+  }
+
+  let added = 0, skipped = 0;
+  lines.forEach(line=>{
+    const parts = line.split(',').map(p=>p.trim());
+    const name = parts[0];
+    const retail = parts[1] !== undefined ? parseFloat(parts[1]) : NaN;
+    const wholesaleRaw = parts[2] !== undefined ? parts[2] : '';
+    const wholesale = wholesaleRaw !== '' && !isNaN(parseFloat(wholesaleRaw)) ? parseFloat(wholesaleRaw) : null;
+
+    if(!name || isNaN(retail)){
+      skipped++;
+      return;
+    }
+    items.push({
+      id: uid(),
+      name,
+      priceRetail: retail,
+      priceWholesale: wholesale,
+      unit: '',
+      category: cat
+    });
+    added++;
+  });
+
+  if(added === 0){
+    resultEl.style.color = 'var(--amber)';
+    resultEl.textContent = 'مقدرش أفهم أي سطر، تأكد من الشكل (اسم, سعر مستهلك, سعر جملة)';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'بيضيف...';
+  await saveItems();
+  resultEl.style.color = 'var(--green-dark)';
+  resultEl.textContent = `تمام! اتضاف ${added} صنف${skipped ? ` (اتجاهل ${skipped} سطر مش مفهوم)` : ''}`;
+  toast(`اتضاف ${added} صنف`);
+  setTimeout(()=>{ closeBulkImport(); }, 1200);
 };
 
 // --- Login modal (real Firebase email/password auth) ---
@@ -662,12 +838,18 @@ auth.onAuthStateChanged((user)=>{
 
 function updateModeUI(){
   const btn = document.getElementById('modeBtn');
+  const note = document.getElementById('branchNote');
+  const bulkBtn = document.getElementById('bulkImportBtn');
   if(editMode){
     btn.textContent = '✅ وضع التعديل شغال — اخرج';
     btn.classList.add('active');
+    note.textContent = 'إنت في وضع التعديل. أي حفظ هيوصل للفروع كلها فورًا';
+    bulkBtn.style.display = 'inline-block';
   }else{
     btn.textContent = '🔒 دخول التعديل';
     btn.classList.remove('active');
+    note.textContent = 'نفس القايمة بتوصل لكل الفروع لحظة بلحظة';
+    bulkBtn.style.display = 'none';
   }
   renderAddForm();
   updateMaintenanceUI();
